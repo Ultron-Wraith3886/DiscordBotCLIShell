@@ -8,9 +8,9 @@ from _bot import New
 
 class Shell:
     def __init__(self,token,_loader_chars=['-','\\','|','/'],_loader_tasks:list=[]):
-        self.bot=New()
         self.token=token
         self.loop=get_event_loop()
+        self.bot=New(self)
         self.nav=Navigator(self.bot)
         self.ld_t=_loader_tasks
         self.ld_c=_loader_chars
@@ -18,6 +18,8 @@ class Shell:
         self.loaded=False
 
         self.console=Console()
+        self.mcount=0
+        self.takeinp = True
 
     def load_shell(self):
         self.loop.run_until_complete(self.load())
@@ -25,6 +27,13 @@ class Shell:
     def run_shell(self):
         self.loop.create_task(self.start())
         self.loop.run_forever()
+
+    def out(self,item):
+
+        print(item)
+        self.counter-=1
+        if self.counter <= 0:
+            self.takeinp=True
 
     async def add_task(self,task:str='None'):
         self.ld_t.append(task)
@@ -59,6 +68,8 @@ class Shell:
 
     async def start(self):
         while True:
+            if not self.takeinp:
+                continue
             inp=input("> ")
             inp=inp.split()
 
@@ -131,10 +142,27 @@ class Shell:
                 else:
                     print("No Channel Selected")
 
+            elif inp[0].startswith('msghis'):
+                if self.nav.chan == '':
+                    print("You haven't navigated to a Channel yet")
+                else:
+                    print("\n")
+                    print("\n".join([f"{msg.author.display_name} : {msg.content}" for msg in await self.nav.show_history(int(inp[1]) if len(inp)>1 else 7)]))
+                    print("\n")
+
+            elif inp[0].startswith('livechat'):
+                if self.nav.chan == '':
+                    print("You haven't navigated to a channel yet")
+                else:
+                    print("\n")
+                    limit=inp[1] if len(inp)>1 else 10
+                    print("Showing Live Chat till",limit,"Messages")
+                    self.mcount=limit
+                    self.takeinp=False
+
             elif inp[0].startswith('clear'):
                 system('cls')
                 system('clear')
 
             elif inp[0].startswith('close'):
-                self.loop.stop()
-                exit()
+                break

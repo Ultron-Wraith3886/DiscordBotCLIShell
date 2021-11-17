@@ -6,6 +6,7 @@ class Navigator:
         self.guild_ins=None
         self.chan=''
         self.chan_ins=None
+        self.history=[]
     
     def show_available_guilds(self):
         guilds=['Guild Name - Guild ID\n']
@@ -59,3 +60,11 @@ class Navigator:
                     break
             return True
         return False
+
+    async def show_history(self,amt:int=7):
+        his = await self.chan_ins.history(limit=amt).flatten()
+        his.reverse()
+        self.history=his
+        return his
+
+    
